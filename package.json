@@ -1,0 +1,29 @@
+{
+  "name": "buyer-show-tool",
+  "version": "1.0.0",
+  "description": "基于 DeepSeek 和通义万相 API 的自动化买家秀生成工具",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "buyer-show",
+    "deepseek",
+    "tongyi",
+    "e-commerce",
+    "review-generator"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bun-types": "^1.3.11",
+    "typescript": "^5.3.3"
+  }
+}
