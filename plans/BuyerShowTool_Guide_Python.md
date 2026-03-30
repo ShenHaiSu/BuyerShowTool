@@ -1,8 +1,8 @@
-# BuyerShowTool 项目指导文档
+# BuyerShowTool 项目指导文档（Python 版）
 
 ## 一、项目概述
 
-本项目是一个基于 Bun 运行时 + TypeScript 开发的自动化工具，用于根据商品资料（JSON/YAML格式）和商品图片，自动生成买家好评文案和买家秀模特图。
+本项目是一个基于 Python 运行时开发的自动化工具，用于根据商品资料（JSON/YAML格式）和商品图片，自动生成买家好评文案和买家秀模特图。
 
 ### 核心功能
 
@@ -11,9 +11,9 @@
 
 ### 技术栈
 
-- **运行环境**：Bun
-- **开发语言**：TypeScript
-- **操作系统**：Windows
+- **运行环境**：Python 3.8+
+- **开发语言**：Python
+- **操作系统**：Windows / macOS / Linux
 - **配置文件**：YAML
 
 ---
@@ -23,23 +23,27 @@
 ```
 BuyerShowTool/
 ├── src/
-│   ├── index.ts              # 入口文件，解析命令行参数并调度任务
+│   ├── __init__.py
+│   ├── index.py                # 入口文件，解析命令行参数并调度任务
 │   ├── config/
-│   │   ├── loader.ts         # 配置文件加载器
-│   │   └── types.ts          # 类型定义
+│   │   ├── __init__.py
+│   │   ├── loader.py           # 配置文件加载器
+│   │   └── types.py            # 类型定义
 │   ├── services/
-│   │   ├── goodsParser.ts    # 商品信息解析器
-│   │   ├── reviewGenerator.ts # 好评文案生成服务
-│   │   └── imageGenerator.ts  # 买家秀图片生成服务
+│   │   ├── __init__.py
+│   │   ├── goodsParser.py      # 商品信息解析器
+│   │   ├── reviewGenerator.py  # 好评文案生成服务
+│   │   └── imageGenerator.py   # 买家秀图片生成服务
 │   ├── api/
-│   │   ├── deepseek.ts       # DeepSeek API 封装
-│   │   └── tongyi.ts         # 通义万相 API 封装
+│   │   ├── __init__.py
+│   │   ├── deepseek.py         # DeepSeek API 封装
+│   │   └── tongyi.py           # 通义万相 API 封装
 │   └── utils/
-│       ├── logger.ts         # 日志工具
-│       └── file.ts           # 文件操作工具
-├── config.yaml               # 项目根目录配置文件（用户可自定义）
-├── package.json
-├── tsconfig.json
+│       ├── __init__.py
+│       ├── logger.py           # 日志工具
+│       └── file.py             # 文件操作工具
+├── config.yaml                 # 项目根目录配置文件（用户可自定义）
+├── requirements.txt            # Python 依赖文件
 └── README.md
 ```
 
@@ -145,7 +149,13 @@ images:
 ### 4.1 执行命令
 
 ```bash
-bun run src/index.ts "C:\example\dir"
+python src/index.py "C:\example\dir"
+```
+
+或者使用 Python 模块方式运行：
+
+```bash
+python -m src "C:\example\dir"
 ```
 
 ### 4.2 输入要求
@@ -195,7 +205,7 @@ C:\example\dir\
 
 ## 五、核心模块设计
 
-### 5.1 入口模块 (src/index.ts)
+### 5.1 入口模块 (src/index.py)
 
 **职责**：
 - 解析命令行参数，获取目标路径
@@ -205,11 +215,13 @@ C:\example\dir\
 - 统一处理错误和日志输出
 
 **关键函数**：
-```typescript
-async function main(): Promise<void>
+```python
+async def main() -> None:
+    """主入口函数"""
+    pass
 ```
 
-### 5.2 配置加载器 (src/config/loader.ts)
+### 5.2 配置加载器 (src/config/loader.py)
 
 **职责**：
 - 加载并解析项目根目录的 `config.yaml`
@@ -218,50 +230,59 @@ async function main(): Promise<void>
 - 提供类型安全的配置访问接口
 
 **关键类型**：
-```typescript
-interface Config {
-  deepseek: {
-    url: string;
-    apiKey: string;
-    model: string;        // 模型名称（如 deepseek-chat）
-    systemPrompt: string;
-    reviewCount: number;  // 好评文案生成次数（3-5次）
-  };
-  tongyi: {
-    url: string;
-    apiKey: string;
-    model: string;        // 模型名称（如 wanx-v1 或 qwen3.5-flash）
-    systemPrompt: string;
-    imageCount: number;
-  };
-}
+```python
+from dataclasses import dataclass
+from typing import List, Optional
 
-interface GoodsInfo {
-  goods: {
-    name: string;
-    category: string;
-    gender: string;
-    ageGroup: string;
-    year: string;
-    season: string;
-    pantsLength?: string;
-    sleeveLength: string;
-    collarType: string;
-    wearType: string;
-    features: string[];
-  };
-  images: string[];
-}
+@dataclass
+class DeepSeekConfig:
+    url: str
+    apiKey: str
+    model: str
+    systemPrompt: str
+    reviewCount: int
+
+@dataclass
+class TongyiConfig:
+    url: str
+    apiKey: str
+    model: str
+    systemPrompt: str
+    imageCount: int
+
+@dataclass
+class Config:
+    deepseek: DeepSeekConfig
+    tongyi: TongyiConfig
+
+@dataclass
+class GoodsInfo:
+    name: str
+    category: str
+    gender: str
+    ageGroup: str
+    year: str
+    season: str
+    pantsLength: Optional[str]
+    sleeveLength: str
+    collarType: str
+    wearType: str
+    features: List[str]
+
+@dataclass
+class GoodsData:
+    goods: GoodsInfo
+    images: List[str]
 ```
 
-### 5.3 商品信息解析器 (src/services/goodsParser.ts)
+### 5.3 商品信息解析器 (src/services/goodsParser.py)
 
 **职责**：
 - 解析 YAML 格式的商品信息
 - 验证商品信息的完整性
 - 将商品信息转换为适合 API 调用的格式
 
-### 5.4 好评文案生成服务 (src/services/reviewGenerator.ts)
+### 5.4 好评文案生成服务 (src/services/reviewGenerator.py)
 
 **职责**：
 - 构建发送给 DeepSeek API 的提示词
@@ -295,7 +316,7 @@ interface GoodsInfo {
   ```
 - 每次生成之间添加适当的延迟，避免 API 限流
 
-### 5.5 买家秀图片生成服务 (src/services/imageGenerator.ts)
+### 5.5 买家秀图片生成服务 (src/services/imageGenerator.py)
 
 **职责**：
 - 构建发送给通义万相 API 的提示词
@@ -318,7 +339,7 @@ interface GoodsInfo {
 +
 季节：{season}
 +
-袖长：{sleevelength}
+袖长：{sleeveLength}
 +
 领型：{collarType}
 +
@@ -327,7 +348,7 @@ interface GoodsInfo {
 "请生成一张买家秀模特图，背景为{随机选择：家居室内客厅/户外草地}，模特姿势自然，图片主体为商品本身，不显示模特面部和头部"
 ```
 
-### 5.6 DeepSeek API 封装 (src/api/deepseek.ts)
+### 5.6 DeepSeek API 封装 (src/api/deepseek.py)
 
 **职责**：
 - 封装 DeepSeek Chat API 调用
@@ -335,27 +356,40 @@ interface GoodsInfo {
 - 错误处理和重试机制
 
 **API 调用示例**：
-```typescript
-interface DeepSeekRequest {
-  model: string;           // 如 "deepseek-chat"
-  messages: Array<{
-    role: "system" | "user";
-    content: string;
-  }>;
-  temperature?: number;
-  max_tokens?: number;
-}
+```python
+import requests
+from typing import List, Dict, Any, Optional
 
-interface DeepSeekResponse {
-  choices: Array<{
-    message: {
-      content: string;
-    };
-  }>;
-}
+class DeepSeekClient:
+    def __init__(self, api_key: str, model: str = "deepseek-chat", 
+                 base_url: str = "https://api.deepseek.com/v1/chat/completions"):
+        self.api_key = api_key
+        self.model = model
+        self.base_url = base_url
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+    def chat(self, messages: List[Dict[str, str]], 
+             temperature: float = 0.7, 
+             max_tokens: int = 1000) -> Optional[str]:
+        """调用 DeepSeek Chat API"""
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        
+        response = requests.post(self.base_url, json=payload, headers=self.headers)
+        response.raise_for_status()
+        
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
 ```
 
-### 5.7 通义万相 API 封装 (src/api/tongyi.ts)
+### 5.7 通义万相 API 封装 (src/api/tongyi.py)
 
 **职责**：
 - 封装通义万相文生图 API 调用
@@ -363,24 +397,62 @@ interface DeepSeekResponse {
 - 错误处理和重试机制
 
 **API 调用示例**：
-```typescript
-interface TongyiRequest {
-  model: string;           // 如 "wanx-v1"
-  input: {
-    prompt: string;
-  };
-  parameters: {
-    size?: string;         // 如 "1024x1024"
-    n?: number;            // 生成图片数量
-  };
-}
+```python
+import requests
+import time
+from typing import Optional, Dict, Any
 
-interface TongyiResponse {
-  output: {
-    task_id: string;
-  };
-  request_id: string;
-}
+class TongyiClient:
+    def __init__(self, api_key: str, model: str = "wanx-v1",
+                 base_url: str = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/generation"):
+        self.api_key = api_key
+        self.model = model
+        self.base_url = base_url
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "X-DashScope-Async": "enable"  # 启用异步调用
+        }
+
+    def generate_image(self, prompt: str, size: str = "1024x1024") -> Optional[str]:
+        """调用通义万相 API 生成图片"""
+        payload = {
+            "model": self.model,
+            "input": {"prompt": prompt},
+            "parameters": {
+                "size": size,
+                "n": 1
+            }
+        }
+        
+        response = requests.post(self.base_url, json=payload, headers=self.headers)
+        response.raise_for_status()
+        
+        data = response.json()
+        task_id = data["output"]["task_id"]
+        
+        # 轮询等待图片生成完成
+        return self._wait_for_result(task_id)
+
+    def _wait_for_result(self, task_id: str, max_retries: int = 30) -> Optional[str]:
+        """轮询获取生成结果"""
+        status_url = f"https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/generation"
+        
+        for _ in range(max_retries):
+            response = requests.get(
+                f"{status_url}/task-groups/{task_id}/tasks/{task_id}",
+                headers=self.headers
+            )
+            data = response.json()
+            
+            if data["output"]["task_status"] == "SUCCEEDED":
+                return data["output"]["results"][0]["url"]
+            elif data["output"]["task_status"] == "FAILED":
+                raise Exception(f"图片生成失败: {data}")
+            
+            time.sleep(2)
+        
+        raise Exception("图片生成超时")
 ```
 
 ---
@@ -452,7 +524,22 @@ flowchart TD
 
 ## 八、使用示例
 
-### 8.1 准备目标路径
+### 8.1 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+`requirements.txt` 内容示例：
+
+```txt
+pyyaml>=6.0
+requests>=2.28.0
+aiohttp>=3.8.0
+Pillow>=9.0.0
+```
+
+### 8.2 准备目标路径
 
 假设目标路径为 `C:\example\dir`，需要创建以下文件：
 
@@ -464,13 +551,19 @@ C:\example\dir\
 └── detail.jpg
 ```
 
-### 8.2 执行命令
+### 8.3 执行命令
 
 ```bash
-bun run src/index.ts "C:\example\dir"
+python src/index.py "C:\example\dir"
 ```
 
-### 8.3 查看结果
+或者使用 Python 模块方式运行：
+
+```bash
+python -m src "C:\example\dir"
+```
+
+### 8.4 查看结果
 
 执行完成后，在目标路径下查看生成的文件：
 
@@ -496,6 +589,8 @@ C:\example\dir\
 3. **图片格式**：支持 jpg/jpeg/png 格式的图片文件
 4. **YAML 格式**：注意 YAML 文件的缩进和格式，避免解析错误
 5. **并发限制**：根据 API 的并发限制，合理设置图片生成数量
+6. **Python 版本**：建议使用 Python 3.8 或更高版本
+7. **虚拟环境**：建议使用虚拟环境管理项目依赖
 
 ---
 
@@ -506,3 +601,5 @@ C:\example\dir\
 3. **自定义模板**：支持用户自定义好评文案的模板
 4. **图片风格选择**：支持用户选择不同的买家秀背景风格
 5. **日志系统**：支持更详细的日志记录和日志轮转
+6. **异步支持**：使用 asyncio 实现异步 API 调用，提高执行效率
+7. **类型注解**：完善类型注解，支持 mypy 类型检查

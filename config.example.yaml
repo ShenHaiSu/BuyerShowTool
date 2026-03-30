@@ -4,6 +4,8 @@ deepseek:
   url: "https://api.deepseek.com/v1/chat/completions"
   # API 密钥
   apiKey: "your-deepseek-api-key-here"
+  # 模型名称（如 deepseek-chat）
+  model: "deepseek-chat"
   # 前调提示词（后续会拼接目标路径下的 goods.yaml 作为完整提示词）
   systemPrompt: |
     你是一位专业的电商运营专家，擅长撰写真实、客观的买家好评文案。
@@ -25,6 +27,8 @@ tongyi:
   url: "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/generation"
   # API 密钥
   apiKey: "your-tongyi-api-key-here"
+  # 模型名称（如 wanx-v1 或 qwen3.5-flash）
+  model: "wanx-v1"
   # 前调提示词（后续会拼接商品信息作为完整提示词）
   systemPrompt: |
     请生成一张电商买家秀模特图。

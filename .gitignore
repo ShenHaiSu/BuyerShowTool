@@ -137,3 +137,7 @@ dist
 
 # 配置文件
 config.yaml
+
+# Python cache
+__pycache__/
+**/__pycache__/
