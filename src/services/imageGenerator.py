@@ -1,6 +1,8 @@
 """买家秀图片生成服务模块"""
 import os
 import random
+import sys
+import time
 from typing import List, Optional
 from src.api.tongyi import TongyiClient
 from src.config.types import Config, GoodsData
@@ -24,16 +26,42 @@ class ImageGenerator:
         # 获取图片生成数量
         image_count = self.config.tongyi.imageCount
         
-        print(f"开始生成 {image_count} 张买家秀图片...")
+        print(f"\n🖼️ 开始生成买家秀图片: 共 {image_count} 张")
+        print("-" * 50)
         
         # 获取商品图片路径
         image_urls = self._get_image_paths(goods_data.images, target_dir)
         
-        # 生成多张图片
+        if not image_urls:
+            print("⚠️ 警告: 未找到商品图片，可能影响生成效果")
+        
+        # 生成多张图片（带进度展示）
+        saved_paths = self._generate_images_with_progress(
+            goods_data=goods_data,
+            target_dir=target_dir,
+            image_urls=image_urls,
+            image_count=image_count
+        )
+        
+        print(f"\n✅ 买家秀图片生成完成: 成功 {len(saved_paths)}/{image_count} 张")
+        return saved_paths
+    
+    def _generate_images_with_progress(self, goods_data: GoodsData, target_dir: str,
+                                        image_urls: List[str], image_count: int) -> List[str]:
+        """生成多张图片并显示进度"""
         saved_paths = []
+        start_time = time.time()
         
         for i in range(image_count):
-            print(f"生成第 {i+1} 张图片...")
+            # 显示当前进度
+            elapsed = time.time() - start_time
+            percent = int(((i + 1) / image_count) * 100)
+            bar_length = 20
+            filled = int((i + 1) / image_count * bar_length)
+            bar = "█" * filled + "░" * (bar_length - filled)
+            
+            print(f"\r  🖼️ 买家秀进度: [{bar}] {percent}% ({i+1}/{image_count})", end="")
+            sys.stdout.flush()
             
             # 构建提示词
             prompt = self._build_prompt(goods_data)
@@ -46,18 +74,17 @@ class ImageGenerator:
                 save_path = os.path.join(target_dir, f"buyer_show_{i+1}.jpg")
                 if download_image(image_url, save_path):
                     saved_paths.append(save_path)
-                    print(f"第 {i+1} 张图片已保存到: {save_path}")
+                    print(f"\r  ✅ 第 {i+1} 张图片生成并保存成功")
                 else:
-                    print(f"第 {i+1} 张图片下载失败")
+                    print(f"\r  ❌ 第 {i+1} 张图片下载失败")
             else:
-                print(f"第 {i+1} 张图片生成失败")
+                print(f"\r  ❌ 第 {i+1} 张图片生成失败")
             
             # 延迟等待，避免 API 限流
             if i < image_count - 1:
-                import time
                 time.sleep(2)
         
-        print(f"成功生成 {len(saved_paths)} 张买家秀图片")
+        print()  # 换行
         return saved_paths
     
     def _get_image_paths(self, images: List[str], target_dir: str) -> List[str]:
@@ -107,6 +134,6 @@ class ImageGenerator:
             prompt_parts.append(f"特殊卖点: {features_str}")
         
         prompt_parts.append("")
-        prompt_parts.append(f"请生成一张买家秀模特图，背景为{background}，模特姿势{pose}，图片主体为商品本身，不显示模特面部和头部，模特为亚洲中国中年男士，画面真实自然，符合真实买家秀风格")
+        prompt_parts.append(f"请生成一张买家秀模特图，背景为{background}，模特姿势{pose}，图片主体为商品本身，不显示模特面部和头部，模特为亚洲中国中年男士，画面真实自然，符合真实买家秀风格。")
         
         return "\n".join(prompt_parts)
