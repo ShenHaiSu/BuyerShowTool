@@ -7,12 +7,13 @@ from typing import Optional
 class ProgressTracker:
     """进度追踪器"""
     
-    def __init__(self, total_reviews: int = 0, total_images: int = 0):
+    def __init__(self, total_reviews: int = 0, total_images: int = 0, log_queue=None):
         self.total_reviews = total_reviews
         self.total_images = total_images
         self.completed_reviews = 0
         self.completed_images = 0
         self.start_time = time.time()
+        self.log_queue = log_queue
     
     def update_review_progress(self, current: int, total: int = None):
         """更新好评文案进度"""
@@ -58,9 +59,13 @@ class ProgressTracker:
             remaining_str = "计算中..."
         
         # 打印进度
-        print("\r" + " " * 80, end="")  # 清除上一行
-        print(f"\r📊 进度: [{bar}] {percent}% | 好评文案: {self.completed_reviews}/{self.total_reviews} | 买家秀: {self.completed_images}/{self.total_images} | 耗时: {elapsed_str} | 预计剩余: {remaining_str}", end="")
-        sys.stdout.flush()
+        progress_msg = f"📊 进度: [{bar}] {percent}% | 好评文案: {self.completed_reviews}/{self.total_reviews} | 买家秀: {self.completed_images}/{self.total_images} | 耗时: {elapsed_str} | 预计剩余: {remaining_str}"
+        if self.log_queue:
+            self.log_queue.put(progress_msg)
+        else:
+            print("\r" + " " * 80, end="")  # 清除上一行
+            print(f"\r{progress_msg}", end="")
+            sys.stdout.flush()
     
     def _format_time(self, seconds: float) -> str:
         """格式化时间"""
@@ -78,7 +83,8 @@ class ProgressTracker:
     def finish(self):
         """完成进度追踪"""
         self._print_progress()
-        print()  # 换行
+        if not self.log_queue:
+            print()  # 换行
     
     def print_summary(self):
         """打印汇总信息"""
@@ -88,40 +94,72 @@ class ProgressTracker:
         total_items = self.total_reviews + self.total_images
         completed_items = self.completed_reviews + self.completed_images
         
-        print("\n" + "=" * 50)
-        print("📋 生成汇总")
-        print("=" * 50)
-        print(f"✅ 好评文案: {self.completed_reviews}/{self.total_reviews}")
-        print(f"✅ 买家秀图片: {self.completed_images}/{self.total_images}")
-        print(f"📦 总计: {completed_items}/{total_items}")
-        print(f"⏱️ 总耗时: {elapsed_str}")
-        print("=" * 50)
+        summary_lines = [
+            "\n" + "=" * 50,
+            "📋 生成汇总",
+            "=" * 50,
+            f"✅ 好评文案: {self.completed_reviews}/{self.total_reviews}",
+            f"✅ 买家秀图片: {self.completed_images}/{self.total_images}",
+            f"📦 总计: {completed_items}/{total_items}",
+            f"⏱️ 总耗时: {elapsed_str}",
+            "=" * 50
+        ]
+        
+        for line in summary_lines:
+            if self.log_queue:
+                self.log_queue.put(line)
+            else:
+                print(line)
 
 
-def print_header(title: str, width: int = 50):
+def print_header(title: str, width: int = 50, log_queue=None):
     """打印带装饰的标题"""
-    print()
-    print("=" * width)
-    print(f"  {title}")
-    print("=" * width)
+    lines = [
+        "",
+        "=" * width,
+        f"  {title}",
+        "=" * width
+    ]
+    
+    for line in lines:
+        if log_queue:
+            log_queue.put(line)
+        else:
+            print(line)
 
 
-def print_step(step: str, current: int, total: int, item_type: str = "任务"):
+def print_step(step: str, current: int, total: int, item_type: str = "任务", log_queue=None):
     """打印步骤进度"""
     percent = int((current / total) * 100) if total > 0 else 0
-    print(f"  🔄 {step}: {current}/{total} ({percent}%) {item_type}")
+    msg = f"  🔄 {step}: {current}/{total} ({percent}%) {item_type}"
+    if log_queue:
+        log_queue.put(msg)
+    else:
+        print(msg)
 
 
-def print_success(message: str):
+def print_success(message: str, log_queue=None):
     """打印成功信息"""
-    print(f"  ✅ {message}")
+    msg = f"  ✅ {message}"
+    if log_queue:
+        log_queue.put(msg)
+    else:
+        print(msg)
 
 
-def print_warning(message: str):
+def print_warning(message: str, log_queue=None):
     """打印警告信息"""
-    print(f"  ⚠️ {message}")
+    msg = f"  ⚠️ {message}"
+    if log_queue:
+        log_queue.put(msg)
+    else:
+        print(msg)
 
 
-def print_error(message: str):
+def print_error(message: str, log_queue=None):
     """打印错误信息"""
-    print(f"  ❌ {message}")
+    msg = f"  ❌ {message}"
+    if log_queue:
+        log_queue.put(msg)
+    else:
+        print(msg)
