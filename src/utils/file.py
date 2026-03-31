@@ -69,3 +69,32 @@ def copy_file(src: str, dst: str) -> bool:
     except Exception as e:
         print(f"复制文件失败: {src} -> {dst}, 错误: {e}")
         return False
+
+
+def find_goods_yaml_paths(root_path: str, deep: bool = False) -> List[str]:
+    """
+    查找所有包含 goods.yaml 的文件夹路径
+    
+    Args:
+        root_path: 根路径
+        deep: 是否深度遍历（找到后仍继续搜索子目录）
+    
+    Returns:
+        List[str]: 包含 goods.yaml 的文件夹路径列表
+    """
+    result = []
+    
+    goods_yaml_path = os.path.join(root_path, "goods.yaml")
+    if os.path.exists(goods_yaml_path):
+        result.append(root_path)
+        if not deep:
+            return result
+    
+    if os.path.isdir(root_path):
+        for item in os.listdir(root_path):
+            item_path = os.path.join(root_path, item)
+            if os.path.isdir(item_path):
+                sub_results = find_goods_yaml_paths(item_path, deep)
+                result.extend(sub_results)
+    
+    return result

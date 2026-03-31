@@ -27,7 +27,7 @@ tongyi:
   url: "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/generation"
   # API 密钥
   apiKey: "your-tongyi-api-key-here"
-  # 模型名称（如 wanx-v1 或 qwen3.5-flash）
+  # 模型名称（如 wanx-v1 或 qwen-image-2.0）
   model: "wanx-v1"
   # 前调提示词（后续会拼接商品信息作为完整提示词）
   systemPrompt: |
