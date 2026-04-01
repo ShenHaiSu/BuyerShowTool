@@ -2,14 +2,15 @@
 import os
 import time
 from typing import List, Optional
-from dashscope import MultiModalConversation
+from dashscope.aigc.image_generation import ImageGeneration
+from dashscope.api_entities.dashscope_response import Message
 import dashscope
 
 
 class TongyiClient:
     """通义万相 API 客户端"""
     
-    def __init__(self, api_key: str, model: str = "qwen-image-2.0"):
+    def __init__(self, api_key: str, model: str = "wan2.7-image"):
         self.api_key = api_key
         self.model = model
         # 设置 API 基础 URL
@@ -18,7 +19,7 @@ class TongyiClient:
     def generate_image(self, prompt: str, image_urls: List[str] = None) -> Optional[str]:
         """调用通义万相 API 生成图片（文+图生图）"""
         try:
-            # 构建消息内容
+            # 构建消息内容，参考 tongyi.example.py 的格式
             content = []
             
             # 如果有商品图片，添加到消息中
@@ -30,22 +31,17 @@ class TongyiClient:
             content.append({"text": prompt})
             
             messages = [
-                {
-                    "role": "user",
-                    "content": content
-                }
+                Message(
+                    role="user",
+                    content=content
+                )
             ]
             
-            # 调用 API
-            response = MultiModalConversation.call(
-                api_key=self.api_key,
+            # 调用 API，参考 tongyi.example.py 的调用方式
+            response = ImageGeneration.call(
                 model=self.model,
+                api_key=self.api_key,
                 messages=messages,
-                result_format='message',
-                stream=False,
-                n=1,
-                watermark=False,
-                negative_prompt=""
             )
             
             # 解析响应

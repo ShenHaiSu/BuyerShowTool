@@ -31,12 +31,10 @@ deepseek:
 
 # 通义万相 API 配置（用于生成买家秀图片）
 tongyi:
-  # API 请求地址
-  url: "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/generation"
   # API 密钥
   apiKey: "your-tongyi-api-key-here"
-  # 模型名称（如 wanx-v1 或 qwen3.5-flash）
-  model: "wanx-v1"
+  # 模型名称（如 wan2.7-image 或 wanx-v1）
+  model: "wan2.7-image"
   # 前调提示词（后续会拼接商品信息作为完整提示词）
   systemPrompt: |
     请生成一张电商买家秀模特图。
@@ -85,8 +83,12 @@ images:
 """
 
 
-def load_config(config_path: str = "config.yaml") -> Config:
+def load_config(config_path: str = None) -> Config:
     """加载项目根目录的 config.yaml 配置文件"""
+    if config_path is None:
+        # 默认从 src/config.yaml 读取
+        config_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
+    
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"配置文件不存在: {config_path}，请创建配置文件")
     
@@ -105,14 +107,14 @@ def load_config(config_path: str = "config.yaml") -> Config:
     deepseek_data = data['deepseek']
     tongyi_data = data['tongyi']
     
-    # 验证 DeepSeek 配置
-    required_deepseek_fields = ['url', 'apiKey', 'model', 'systemPrompt', 'reviewCount']
+    # 验证 DeepSeek 配置（systemPrompt 改为可选）
+    required_deepseek_fields = ['url', 'apiKey', 'model', 'reviewCount']
     for field in required_deepseek_fields:
         if field not in deepseek_data:
             raise ValueError(f"DeepSeek 配置缺少必要字段: {field}")
     
-    # 验证通义配置
-    required_tongyi_fields = ['url', 'apiKey', 'model', 'systemPrompt', 'imageCount']
+    # 验证通义配置（systemPrompt 改为可选）
+    required_tongyi_fields = ['apiKey', 'model', 'imageCount']
     for field in required_tongyi_fields:
         if field not in tongyi_data:
             raise ValueError(f"通义配置缺少必要字段: {field}")
@@ -121,15 +123,14 @@ def load_config(config_path: str = "config.yaml") -> Config:
         url=deepseek_data['url'],
         apiKey=deepseek_data['apiKey'],
         model=deepseek_data['model'],
-        systemPrompt=deepseek_data['systemPrompt'],
+        systemPrompt=deepseek_data.get('systemPrompt', '你是一位专业的电商运营专家，擅长撰写真实、客观的买家好评文案。'),
         reviewCount=deepseek_data['reviewCount']
     )
     
     tongyi_config = TongyiConfig(
-        url=tongyi_data['url'],
         apiKey=tongyi_data['apiKey'],
         model=tongyi_data['model'],
-        systemPrompt=tongyi_data['systemPrompt'],
+        systemPrompt=tongyi_data.get('systemPrompt', '请生成一张电商买家秀模特图。'),
         imageCount=tongyi_data['imageCount']
     )
     
@@ -193,8 +194,8 @@ def check_and_generate_config() -> bool:
     Returns:
         bool: config.yaml 是否已存在
     """
-    config_path = "config.yaml"
-    example_path = "config.example.yaml"
+    config_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
+    example_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.example.yaml')
     
     if os.path.exists(config_path):
         return True
