@@ -110,6 +110,14 @@ class ProgressTracker:
                 self.log_queue.put(line)
             else:
                 print(line)
+    
+    def get_stats(self) -> dict:
+        """获取统计信息字典"""
+        return {
+            'reviews_count': self.completed_reviews,
+            'images_count': self.completed_images,
+            'start_time': self.start_time
+        }
 
 
 def print_header(title: str, width: int = 50, log_queue=None):
