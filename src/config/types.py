@@ -16,7 +16,6 @@ class DeepSeekConfig:
 @dataclass
 class TongyiConfig:
     """通义万相 API 配置"""
-    url: str
     apiKey: str
     model: str
     systemPrompt: str
